@@ -1,11 +1,31 @@
 import { useState } from "react";
 import { ResizeMode, Video } from "expo-av";
-import { View, Text, TouchableOpacity, Image } from "react-native";
-
+import { View, Text, TouchableOpacity, Image, Alert } from "react-native";
 import { icons } from "../constants";
 
-const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
+const VideoCard = ({ title, creator, avatar, thumbnail, video, userId, postId, onDelete }) => {
   const [play, setPlay] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      const confirmed = await new Promise((resolve) => {
+        Alert.alert(
+          "Delete Video",
+          "Are you sure you want to delete this video?",
+          [
+            { text: "Cancel", onPress: () => resolve(false), style: "cancel" },
+            { text: "Delete", onPress: () => resolve(true), style: "destructive" },
+          ]
+        );
+      });
+
+      if (confirmed && onDelete) {
+        onDelete(postId);
+      }
+    } catch (error) {
+      Alert.alert("Error", `An error occurred while deleting the video: ${error.message}`);
+    }
+  };
 
   return (
     <View className="flex flex-col items-center px-4 mb-14">
@@ -36,7 +56,13 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
         </View>
 
         <View className="pt-2">
-          <Image source={icons.menu} className="w-5 h-5" resizeMode="contain" />
+          <TouchableOpacity onPress={handleDelete}>
+            <Image
+              source={icons.favicon}
+              className="w-5 h-5"
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
         </View>
       </View>
 

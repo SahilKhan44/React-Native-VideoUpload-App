@@ -1,16 +1,16 @@
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Image, FlatList, TouchableOpacity } from "react-native";
+import { View, Image, FlatList, TouchableOpacity, Alert } from "react-native";
 
 import { icons } from "../../constants";
 import useAppwrite from "../../lib/useAppwrite";
-import { getUserPosts, signOut } from "../../lib/appwrite";
+import { getUserPosts, signOut, deleteVideoPost } from "../../lib/appwrite";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { EmptyState, InfoBox, VideoCard } from "../../components";
 
 const Profile = () => {
   const { user, setUser, setIsLogged } = useGlobalContext();
-  const { data: posts } = useAppwrite(() => getUserPosts(user.$id));
+  const { data: posts, refetch } = useAppwrite(() => getUserPosts(user.$id));
 
   const logout = async () => {
     await signOut();
@@ -18,6 +18,20 @@ const Profile = () => {
     setIsLogged(false);
 
     router.replace("/sign-in");
+  };
+
+  const handleDeletePost = async (postId) => {
+    try {
+      const success = await deleteVideoPost(postId);
+      if (success) {
+        Alert.alert("Success", "Video deleted successfully.");
+        refetch(); // Refresh the list of posts
+      } else {
+        Alert.alert("Error", "Failed to delete the video.");
+      }
+    } catch (error) {
+      Alert.alert("Error", `An error occurred: ${error.message}`);
+    }
   };
 
   return (
@@ -32,6 +46,8 @@ const Profile = () => {
             video={item.video}
             creator={item.creator.username}
             avatar={item.creator.avatar}
+            postId={item.$id}
+            onDelete={handleDeletePost}
           />
         )}
         ListEmptyComponent={() => (
